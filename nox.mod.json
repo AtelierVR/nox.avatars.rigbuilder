@@ -1,0 +1,43 @@
+{
+  "type": "mod",
+  "id": "nox.avatars.rigbuilder",
+  "provides": [],
+  "name": "Avatar RigBuilder Backend",
+  "version": "1.0.0",
+  "description": "Registers the Unity Animation Rigging (RigBuilder) backend for avatar IK.",
+  "license": "GPL-3.0",
+  "icon": null,
+  "contact": {
+    "email": "hactazia@gmail.com",
+    "source": "https://github.com/AtelierVR/nox.avatars.rigbuilder",
+    "website": "https://nox.hactazia.fr/",
+    "issues": "https://github.com/AtelierVR/nox.avatars.rigbuilder/issues"
+  },
+  "authors": [
+    {
+      "name": "Hactazia",
+      "email": "hactazia@gmail.com",
+      "website": "https://hactazia.fr/"
+    }
+  ],
+  "contributors": [],
+  "relations": [
+    {
+      "id": "nox.avatars.modules",
+      "type": "depends",
+      "version": ">=1.0.0"
+    },
+    {
+      "id": "nox.avatars.finalik",
+      "type": "conflicts",
+      "version": ">=0.0.0"
+    }
+  ],
+  "entrypoints": {
+    "main": [
+      "Nox.Avatars.RigBuilder.Runtime.Main"
+    ]
+  },
+  "references": [],
+  "permissions": []
+}

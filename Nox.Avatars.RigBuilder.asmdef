@@ -1,0 +1,21 @@
+{
+  "name": "Nox.Avatars.RigBuilder.Runtime",
+  "rootNamespace": "",
+  "references": [
+    "Nox.CCK",
+    "Nox.Avatars.Rigging",
+    "Nox.CCK.Avatars.Rigging",
+    "Unity.Animation.Rigging",
+    "Nox.Avatars",
+    "Nox.Avatars.Parameters"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
