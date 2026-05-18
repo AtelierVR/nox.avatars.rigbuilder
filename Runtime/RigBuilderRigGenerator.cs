@@ -1,6 +1,7 @@
 using Nox.CCK.Utils;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
+using Logger = Nox.CCK.Utils.Logger;
 using RB = UnityEngine.Animations.Rigging.RigBuilder;
 
 namespace Nox.Avatars.RigBuilder {
@@ -14,9 +15,74 @@ namespace Nox.Avatars.RigBuilder {
 	/// Quand FinalIK est disponible, préférez utiliser FinalIKRigGenerator.
 	/// </summary>
 	public static class RigBuilderRigGenerator {
+		private static readonly HumanBodyBones[] CriticalBones = {
+			HumanBodyBones.Chest,
+			HumanBodyBones.Neck,
+			HumanBodyBones.Head,
+			HumanBodyBones.LeftUpperArm,
+			HumanBodyBones.LeftLowerArm,
+			HumanBodyBones.LeftHand,
+			HumanBodyBones.RightUpperArm,
+			HumanBodyBones.RightLowerArm,
+			HumanBodyBones.RightHand,
+			HumanBodyBones.LeftUpperLeg,
+			HumanBodyBones.LeftLowerLeg,
+			HumanBodyBones.LeftFoot,
+			HumanBodyBones.RightUpperLeg,
+			HumanBodyBones.RightLowerLeg,
+			HumanBodyBones.RightFoot,
+		};
+
+		private static bool ValidateHumanoidBones(RigBuilderAvatarModule module) {
+			var animator = module.Descriptor.Animator;
+			var root     = module.Descriptor.Anchor;
+
+			// Build a set of all transform names in the full hierarchy to detect duplicates.
+			var allTransforms = root.GetComponentsInChildren<Transform>(true);
+			var nameCounts    = new System.Collections.Generic.Dictionary<string, int>(allTransforms.Length);
+			foreach (var t in allTransforms) {
+				var n = t.name;
+				nameCounts[n] = nameCounts.TryGetValue(n, out var c) ? c + 1 : 1;
+			}
+
+			foreach (var bone in CriticalBones) {
+				var boneTransform = module.GetBone(bone);
+				if (!boneTransform) {
+					Logger.LogError(
+						$"Cannot build IK rig: humanoid bone '{bone}' could not be resolved. " +
+						"The avatar may have duplicate transform names in its hierarchy (e.g. two bones " +
+						"with the same name under different parents). Fix the avatar to avoid " +
+						"TransformStreamHandle crashes in the animation rigging system.",
+						context: root,
+						tag: nameof(RigBuilderRigGenerator)
+					);
+					return false;
+				}
+
+				// Detect duplicate names: if another transform shares the bone's name,
+				// GetBoneTransform may have resolved to the wrong one (not in the humanoid skeleton).
+				// That wrong transform is not in the AnimationStream → TransformStreamHandle crash.
+				if (nameCounts.TryGetValue(boneTransform.name, out var count) && count > 1) {
+					Logger.LogError(
+						$"Cannot build IK rig: transform name '{boneTransform.name}' (used for humanoid bone '{bone}') " +
+						$"appears {count} times in the avatar hierarchy. All bone names must be unique. " +
+						"Rename the conflicting transforms (e.g. inside accessory objects like 'RindoHand') " +
+						"to avoid TransformStreamHandle crashes.",
+						context: root,
+						tag: nameof(RigBuilderRigGenerator)
+					);
+					return false;
+				}
+			}
+			return true;
+		}
+
 		public static RB Create(RigBuilderAvatarModule module) {
 			var rigBuilder = CreateRigBuilder(module);
 			rigBuilder.enabled = false;
+
+			if (!ValidateHumanoidBones(module))
+				return rigBuilder; // leave disabled — avoids Burst TransformStreamHandle crash
 
 			CreateUpperSpine(module, rigBuilder);
 			CreateLeftArm(module, rigBuilder);
