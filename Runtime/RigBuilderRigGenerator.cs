@@ -77,7 +77,7 @@ namespace Nox.Avatars.RigBuilder {
 			return true;
 		}
 
-		public static RB Create(RigBuilderAvatarModule module) {
+		public static RB Create(RigBuilderAvatarModule module, IRuntimeAvatar runtime) {
 			var rigBuilder = CreateRigBuilder(module);
 			rigBuilder.enabled = false;
 

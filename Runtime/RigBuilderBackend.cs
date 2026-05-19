@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using Nox.Avatars.Rigging;
-using UnityEngine;
-using Nox.CCK.Avatars.Rigging;
 using Nox.CCK.Utils;
+using Logger = Nox.CCK.Utils.Logger;
 
 namespace Nox.Avatars.RigBuilder {
 	/// <summary>
@@ -21,14 +19,24 @@ namespace Nox.Avatars.RigBuilder {
 			=> 0;
 
 		/// <inheritdoc/>
-		public IRiggingModule Instantiate(IRuntimeAvatar runtime)
-			=> runtime.Descriptor.Anchor.GetOrAddComponent<RigBuilderAvatarModule>();
+		public IRiggingModule Instantiate(IRuntimeAvatar runtime) {
+			var module = runtime.Descriptor.Anchor.GetOrAddComponent<RigBuilderAvatarModule>();
+			
+			if (!module.Before(runtime)) {
+				Logger.LogError("Failed to initialize with the given runtime arguments.", module, nameof(RigBuilderBackend));
+				module.enabled = false;
+				return null;
+			}
 
-		/// <inheritdoc/>
-		public void SetupRig(IRiggingModule module) {
-			if (module is not RigBuilderAvatarModule rig)
-				throw new System.ArgumentException($"Expected module of type {nameof(RigBuilderAvatarModule)}, got {module.GetType().Name}");
-			RigBuilderRigGenerator.Create(rig);
+			RigBuilderRigGenerator.Create(module, runtime);
+
+			if (!module.After(runtime)) {
+				Logger.LogError("Failed to finalize setup with the given runtime arguments.", module, nameof(RigBuilderBackend));
+				module.enabled = false;
+				return null;
+			}
+			
+			return module;
 		}
 
 		/// <inheritdoc/>
