@@ -1,5 +1,6 @@
 {
   "name": "nox.avatars.rigbuilder",
   "displayName": "Nox - Avatar RigBuilder Backend",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "Unity Animation Rigging (RigBuilder) backend for avatar IK."
 }
