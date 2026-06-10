@@ -1,7 +1,6 @@
 {
   "type": "mod",
   "id": "nox.avatars.rigbuilder",
-  "provides": [],
   "name": "Avatar RigBuilder Backend",
   "version": "1.0.0",
   "description": "Registers the Unity Animation Rigging (RigBuilder) backend for avatar IK.",
@@ -20,7 +19,6 @@
       "website": "https://hactazia.fr/"
     }
   ],
-  "contributors": [],
   "relations": [
     {
       "id": "nox.avatars.modules",
@@ -37,7 +35,5 @@
     "main": [
       "Nox.Avatars.RigBuilder.Runtime.Main"
     ]
-  },
-  "references": [],
-  "permissions": []
+  }
 }
