@@ -7,15 +7,15 @@ using Transform = UnityEngine.Transform;
 using RB = UnityEngine.Animations.Rigging.RigBuilder;
 
 namespace Nox.Avatars.RigBuilder {
-	public class RigBuilderAvatarModule : BaseRiggingModule {
+	public class RigBuilderRig : BaseRigging {
 		private RB _rig;
 
 		// ReSharper disable Unity.PerformanceAnalysis
 		public RB GetRig()
 			=> _rig ??= Descriptor.Anchor?.GetComponent<RB>();
 
-		public override bool SetupParameters(BaseRiggingModule m) {
-			if (m is not RigBuilderAvatarModule module)
+		public override bool SetupParameters(BaseRigging m) {
+			if (m is not RigBuilderRig module)
 				return false;
 
 			var rig = module.GetRig();
@@ -63,13 +63,13 @@ namespace Nox.Avatars.RigBuilder {
 		}
 
 		public Transform GetOrAddPart(HumanBodyBones bone, Transform tf) {
-		var part = GetPart(bone);
-		if (part) return part;
+			var part = GetPart(bone);
+			if (part) return part;
 
-		var tr = GetBone(bone);
-		if (!tr) return null;			// Use "IK_" prefix to avoid conflicts with Unity's human bone mapping
+			var tr = GetBone(bone);
+			if (!tr) return null;
 			var p = new GameObject($"IK_{bone}").transform;
-			p.SetParent(tf ?? transform, false);
+			p.SetParent(tf ?? Descriptor.Anchor.transform, false);
 			p.position   = tr.position;
 			p.rotation   = tr.rotation;
 			p.localScale = Vector3.one;

@@ -33,7 +33,7 @@ namespace Nox.Avatars.RigBuilder {
 			HumanBodyBones.RightFoot,
 		};
 
-		private static bool ValidateHumanoidBones(RigBuilderAvatarModule module) {
+		private static bool ValidateHumanoidBones(RigBuilderRig module) {
 			var animator = module.Descriptor.Animator;
 			var root     = module.Descriptor.Anchor;
 
@@ -77,7 +77,7 @@ namespace Nox.Avatars.RigBuilder {
 			return true;
 		}
 
-		public static RB Create(RigBuilderAvatarModule module, IRuntimeAvatar runtime) {
+		public static RB Create(RigBuilderRig module, IRuntimeAvatar runtime) {
 			var rigBuilder = CreateRigBuilder(module);
 			rigBuilder.enabled = false;
 
@@ -96,7 +96,7 @@ namespace Nox.Avatars.RigBuilder {
 			return rigBuilder;
 		}
 
-		private static RB CreateRigBuilder(RigBuilderAvatarModule module) {
+		private static RB CreateRigBuilder(RigBuilderRig module) {
 			var rigBuilder = module.GetRig()
 				?? module.Descriptor
 					.Anchor
@@ -105,7 +105,7 @@ namespace Nox.Avatars.RigBuilder {
 			return rigBuilder;
 		}
 
-		private static void CreateUpperSpine(RigBuilderAvatarModule module, RB rigBuilder) {
+		private static void CreateUpperSpine(RigBuilderRig module, RB rigBuilder) {
 			var upperSpine = new GameObject(GetRigFromBone(HumanBodyBones.Head));
 			upperSpine.transform.SetParent(rigBuilder.transform);
 			upperSpine.transform.localPosition = Vector3.zero;
@@ -141,7 +141,7 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.hintWeight           = 1.0f;
 		}
 
-		private static void CreateLeftArm(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateLeftArm(RigBuilderRig module, RB rigBuilder)
 			=> CreateArm(
 				GetRigFromBone(HumanBodyBones.LeftUpperArm),
 				HumanBodyBones.LeftUpperArm,
@@ -150,7 +150,7 @@ namespace Nox.Avatars.RigBuilder {
 				module, rigBuilder
 			);
 
-		private static void CreateRightArm(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateRightArm(RigBuilderRig module, RB rigBuilder)
 			=> CreateArm(
 				GetRigFromBone(HumanBodyBones.RightUpperArm),
 				HumanBodyBones.RightUpperArm,
@@ -159,7 +159,7 @@ namespace Nox.Avatars.RigBuilder {
 				module, rigBuilder
 			);
 
-		private static void CreateArm(string name, HumanBodyBones upperBone, HumanBodyBones lowerBone, HumanBodyBones handBone, RigBuilderAvatarModule module, RB rigBuilder) {
+		private static void CreateArm(string name, HumanBodyBones upperBone, HumanBodyBones lowerBone, HumanBodyBones handBone, RigBuilderRig module, RB rigBuilder) {
 			var arm = new GameObject(name);
 			arm.transform.SetParent(rigBuilder.transform);
 			arm.transform.localPosition = Vector3.zero;
@@ -195,7 +195,7 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.hintWeight           = 1.0f;
 		}
 
-		private static void CreateLeftLeg(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateLeftLeg(RigBuilderRig module, RB rigBuilder)
 			=> CreateLeg(
 				GetRigFromBone(HumanBodyBones.LeftUpperLeg),
 				HumanBodyBones.LeftUpperLeg,
@@ -204,7 +204,7 @@ namespace Nox.Avatars.RigBuilder {
 				module, rigBuilder
 			);
 
-		private static void CreateRightLeg(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateRightLeg(RigBuilderRig module, RB rigBuilder)
 			=> CreateLeg(
 				GetRigFromBone(HumanBodyBones.RightUpperLeg),
 				HumanBodyBones.RightUpperLeg,
@@ -213,7 +213,7 @@ namespace Nox.Avatars.RigBuilder {
 				module, rigBuilder
 			);
 
-		private static void CreateLeg(string name, HumanBodyBones upperBone, HumanBodyBones lowerBone, HumanBodyBones footBone, RigBuilderAvatarModule module, RB rigBuilder) {
+		private static void CreateLeg(string name, HumanBodyBones upperBone, HumanBodyBones lowerBone, HumanBodyBones footBone, RigBuilderRig module, RB rigBuilder) {
 			var leg = new GameObject(name);
 			leg.transform.SetParent(rigBuilder.transform);
 			leg.transform.localPosition = Vector3.zero;
@@ -249,21 +249,21 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.hintWeight           = 1.0f;
 		}
 
-		private static void CreateLeftToe(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateLeftToe(RigBuilderRig module, RB rigBuilder)
 			=> CreateToe(
 				GetRigFromBone(HumanBodyBones.LeftToes),
 				HumanBodyBones.LeftToes,
 				module, rigBuilder
 			);
 
-		private static void CreateRightToe(RigBuilderAvatarModule module, RB rigBuilder)
+		private static void CreateRightToe(RigBuilderRig module, RB rigBuilder)
 			=> CreateToe(
 				GetRigFromBone(HumanBodyBones.RightToes),
 				HumanBodyBones.RightToes,
 				module, rigBuilder
 			);
 
-		private static void CreateToe(string name, HumanBodyBones toeBone, RigBuilderAvatarModule module, RB rigBuilder) {
+		private static void CreateToe(string name, HumanBodyBones toeBone, RigBuilderRig module, RB rigBuilder) {
 			var toe = new GameObject(name);
 			toe.transform.SetParent(rigBuilder.transform);
 			toe.transform.localPosition = Vector3.zero;

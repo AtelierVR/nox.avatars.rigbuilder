@@ -19,24 +19,26 @@ namespace Nox.Avatars.RigBuilder {
 			=> 0;
 
 		/// <inheritdoc/>
-		public IRiggingModule Instantiate(IRuntimeAvatar runtime) {
-			var module = runtime.Descriptor.Anchor.GetOrAddComponent<RigBuilderAvatarModule>();
-			
-			if (!module.Before(runtime)) {
-				Logger.LogError("Failed to initialize with the given runtime arguments.", module, nameof(RigBuilderBackend));
-				module.enabled = false;
+		public IRigging Create(IRuntimeAvatar runtime) {
+			var rig = new RigBuilderRig {
+				Id = BACKEND_ID
+			};
+
+			if (!rig.Before(runtime)) {
+				Logger.LogError("Failed to initialize with the given runtime arguments.", null, nameof(RigBuilderBackend));
+				rig.Dispose();
 				return null;
 			}
 
-			RigBuilderRigGenerator.Create(module, runtime);
+			RigBuilderRigGenerator.Create(rig, runtime);
 
-			if (!module.After(runtime)) {
-				Logger.LogError("Failed to finalize setup with the given runtime arguments.", module, nameof(RigBuilderBackend));
-				module.enabled = false;
+			if (!rig.After(runtime)) {
+				Logger.LogError("Failed to finalize setup with the given runtime arguments.", null, nameof(RigBuilderBackend));
+				rig.Dispose();
 				return null;
 			}
-			
-			return module;
+
+			return rig;
 		}
 
 		/// <inheritdoc/>
