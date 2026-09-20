@@ -34,41 +34,36 @@ namespace Nox.Avatars.RigBuilder {
 		};
 
 		private static bool ValidateHumanoidBones(RigBuilderRig module) {
-			var animator = module.Descriptor.Animator;
-			var root     = module.Descriptor.Anchor;
-
-			// Build a set of all transform names in the full hierarchy to detect duplicates.
-			var allTransforms = root.GetComponentsInChildren<Transform>(true);
-			var nameCounts    = new System.Collections.Generic.Dictionary<string, int>(allTransforms.Length);
-			foreach (var t in allTransforms) {
-				var n = t.name;
-				nameCounts[n] = nameCounts.TryGetValue(n, out var c) ? c + 1 : 1;
-			}
+			var anchor = module.Descriptor.Anchor;
+			var all    = anchor.GetComponentsInChildren<Transform>(true);
 
 			foreach (var bone in CriticalBones) {
 				var boneTransform = module.GetBone(bone);
 				if (!boneTransform) {
 					Logger.LogError(
-						$"Cannot build IK rig: humanoid bone '{bone}' could not be resolved. " +
-						"The avatar may have duplicate transform names in its hierarchy (e.g. two bones " +
-						"with the same name under different parents). Fix the avatar to avoid " +
-						"TransformStreamHandle crashes in the animation rigging system.",
-						context: root,
+						$"Cannot build IK rig: humanoid bone '{bone}' could not be resolved.",
+						context: anchor,
 						tag: nameof(RigBuilderRigGenerator)
 					);
 					return false;
 				}
 
-				// Detect duplicate names: if another transform shares the bone's name,
-				// GetBoneTransform may have resolved to the wrong one (not in the humanoid skeleton).
-				// That wrong transform is not in the AnimationStream → TransformStreamHandle crash.
-				if (nameCounts.TryGetValue(boneTransform.name, out var count) && count > 1) {
+				// Unity requires human bone names to be unique in the hierarchy. When they are not,
+				// it reports "Ambiguous Transform 'A' and 'B' found in hierarchy for human bone 'X'"
+				// and can no longer resolve any bone: every Animator.BindStreamTransform then returns
+				// an invalid handle and the rig jobs die with "The TransformStreamHandle cannot be
+				// resolved." Nothing we build can work on such an avatar, so leave the RigBuilder off.
+				foreach (var other in all) {
+					if (other == boneTransform || other.name != boneTransform.name)
+						continue;
+
 					Logger.LogError(
-						$"Cannot build IK rig: transform name '{boneTransform.name}' (used for humanoid bone '{bone}') " +
-						$"appears {count} times in the avatar hierarchy. All bone names must be unique. " +
-						"Rename the conflicting transforms (e.g. inside accessory objects like 'RindoHand') " +
-						"to avoid TransformStreamHandle crashes.",
-						context: root,
+						$"Cannot build IK rig: humanoid bone '{bone}' maps to '{boneTransform.name}', " +
+						$"but another transform of the same name exists in the avatar hierarchy " +
+						$"('{other.parent?.name}/{other.name}'). Unity cannot disambiguate human bone " +
+						"names, so the avatar's animation stream stays invalid and the rig would crash. " +
+						"Rename the duplicate transform.",
+						context: anchor,
 						tag: nameof(RigBuilderRigGenerator)
 					);
 					return false;
@@ -129,13 +124,6 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.target = module.GetOrAddPart(HumanBodyBones.Head, upperSpine.transform);
 			constraint.data.hint   = module.GetOrAddPart(HumanBodyBones.Neck, upperSpine.transform);
 
-			if (constraint.data.root)
-				constraint.data.root.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.mid)
-				constraint.data.mid.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.tip)
-				constraint.data.tip.gameObject.GetOrAddComponent<RigTransform>();
-
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
 			constraint.data.hintWeight           = 1.0f;
@@ -182,13 +170,6 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.tip    = module.GetBone(handBone);
 			constraint.data.target = module.GetOrAddPart(handBone, arm.transform);
 			constraint.data.hint   = module.GetOrAddPart(lowerBone, arm.transform);
-
-			if (constraint.data.root)
-				constraint.data.root.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.mid)
-				constraint.data.mid.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.tip)
-				constraint.data.tip.gameObject.GetOrAddComponent<RigTransform>();
 
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
@@ -237,13 +218,6 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.target = module.GetOrAddPart(footBone, leg.transform);
 			constraint.data.hint   = module.GetOrAddPart(lowerBone, leg.transform);
 
-			if (constraint.data.root)
-				constraint.data.root.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.mid)
-				constraint.data.mid.gameObject.GetOrAddComponent<RigTransform>();
-			if (constraint.data.tip)
-				constraint.data.tip.gameObject.GetOrAddComponent<RigTransform>();
-
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
 			constraint.data.hintWeight           = 1.0f;
@@ -283,9 +257,6 @@ namespace Nox.Avatars.RigBuilder {
 
 			constraint.data.constrainedObject = module.GetBone(toeBone);
 			constraint.data.sourceObject      = module.GetOrAddPart(toeBone, toe.transform);
-
-			if (constraint.data.constrainedObject)
-				constraint.data.constrainedObject.gameObject.GetOrAddComponent<RigTransform>();
 
 			constraint.data.dampPosition = 0.1f;
 			constraint.data.dampRotation = 0.1f;
