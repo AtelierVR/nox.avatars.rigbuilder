@@ -41,7 +41,7 @@ namespace Nox.Avatars.RigBuilder {
 			return true;
 		}
 
-		public override bool IsActive(HumanBodyBones bone) {
+		protected override bool GetActive(HumanBodyBones bone) {
 			var rig = GetRig();
 			if (!rig) return false;
 			var n = RigBuilderRigGenerator.GetRigFromBone(bone);
@@ -51,7 +51,7 @@ namespace Nox.Avatars.RigBuilder {
 				.FirstOrDefault();
 		}
 
-		public override void SetActive(HumanBodyBones bone, bool active) {
+		protected override void ApplyActive(HumanBodyBones bone, bool active) {
 			var rig = GetRig();
 			if (!rig) return;
 			var n = RigBuilderRigGenerator.GetRigFromBone(bone);
