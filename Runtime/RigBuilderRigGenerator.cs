@@ -74,6 +74,7 @@ namespace Nox.Avatars.RigBuilder {
 
 		public static RB Create(RigBuilderRig module, IRuntimeAvatar runtime) {
 			var rigBuilder = CreateRigBuilder(module);
+			// Never enabled: see the note on the return below.
 			rigBuilder.enabled = false;
 
 			if (!ValidateHumanoidBones(module))
@@ -87,7 +88,20 @@ namespace Nox.Avatars.RigBuilder {
 			CreateLeftToe(module, rigBuilder);
 			CreateRightToe(module, rigBuilder);
 
-			rigBuilder.enabled = true;
+			// `RigBuilder` stays disabled on purpose, even though the layers above are fully built.
+			//
+			// Its graph is bound to the Animator's transform stream, and its write-back runs after the
+			// animation update: every transform it bound — the IK targets included — is restored to the value
+			// held in the stream, i.e. the pose captured when the graph was built. The targets therefore mirror
+			// the bones they are supposed to drive (`IK_Head` was measured equal to the head bone every frame,
+			// whatever the controllers wrote), which deadlocks the whole target-driven pipeline: no constraint can
+			// ever pull a bone toward a target that is itself being overwritten with that bone's pose.
+			// Measured on a scanned avatar: spine constraint active, weight 1, target moved half a metre — no bone of
+			// the chain moved; and with the component disabled the head instantly follows the camera again.
+			//
+			// The rig objects and layers are kept: they carry the parameter surface (`Rig/Layers/*`, `Rig/Ik/*`)
+			// and the constraints, and the bones are driven from `Parts` by `RigBuilderRig.LateUpdate`, exactly
+			// like VRIK does for the FinalIK backend.
 			return rigBuilder;
 		}
 
@@ -121,8 +135,11 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.root   = module.GetBone(HumanBodyBones.Chest);
 			constraint.data.mid    = module.GetBone(HumanBodyBones.Neck);
 			constraint.data.tip    = module.GetBone(HumanBodyBones.Head);
-			constraint.data.target = module.GetOrAddPart(HumanBodyBones.Head, upperSpine.transform);
-			constraint.data.hint   = module.GetOrAddPart(HumanBodyBones.Neck, upperSpine.transform);
+			// Targets are plain scene transforms moved by the controllers and the relay. The constraint is
+			// kept for the parameter surface; the bones are driven from the parts by RigBuilderRig.LateUpdate
+			// (see the note on `RigBuilder.enabled` in Create).
+			constraint.data.target = module.GetOrAddPart(HumanBodyBones.Head, rigBuilder.transform);
+			constraint.data.hint   = module.GetOrAddPart(HumanBodyBones.Neck, rigBuilder.transform);
 
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
@@ -168,8 +185,8 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.root   = module.GetBone(upperBone);
 			constraint.data.mid    = module.GetBone(lowerBone);
 			constraint.data.tip    = module.GetBone(handBone);
-			constraint.data.target = module.GetOrAddPart(handBone, arm.transform);
-			constraint.data.hint   = module.GetOrAddPart(lowerBone, arm.transform);
+			constraint.data.target = module.GetOrAddPart(handBone, rigBuilder.transform);
+			constraint.data.hint   = module.GetOrAddPart(lowerBone, rigBuilder.transform);
 
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
@@ -215,8 +232,8 @@ namespace Nox.Avatars.RigBuilder {
 			constraint.data.root   = module.GetBone(upperBone);
 			constraint.data.mid    = module.GetBone(lowerBone);
 			constraint.data.tip    = module.GetBone(footBone);
-			constraint.data.target = module.GetOrAddPart(footBone, leg.transform);
-			constraint.data.hint   = module.GetOrAddPart(lowerBone, leg.transform);
+			constraint.data.target = module.GetOrAddPart(footBone, rigBuilder.transform);
+			constraint.data.hint   = module.GetOrAddPart(lowerBone, rigBuilder.transform);
 
 			constraint.data.targetPositionWeight = 1.0f;
 			constraint.data.targetRotationWeight = 1.0f;
@@ -256,7 +273,7 @@ namespace Nox.Avatars.RigBuilder {
 			var constraint = contraint.AddComponent<DampedTransform>();
 
 			constraint.data.constrainedObject = module.GetBone(toeBone);
-			constraint.data.sourceObject      = module.GetOrAddPart(toeBone, toe.transform);
+			constraint.data.sourceObject      = module.GetOrAddPart(toeBone, rigBuilder.transform);
 
 			constraint.data.dampPosition = 0.1f;
 			constraint.data.dampRotation = 0.1f;
